@@ -12,24 +12,18 @@ extension String {
         let idx2 = index(startIndex, offsetBy: min(self.count, range.upperBound))
         return String(self[idx1..<idx2])
     }
-}
-
-extension String {
+    
     /// validates if string matches regex
     func validate(withRegex regex: NSRegularExpression) -> Bool {
         let range = NSRange(self.startIndex..., in: self)
         let matchRange = regex.rangeOfFirstMatch(in: self, options: .reportProgress, range: range)
         return matchRange.location != NSNotFound
     }
-}
-
-extension String {
+    
     func startsWith(_ prefix: String) -> Bool {
         return lowercased().hasPrefix(prefix.lowercased())
     }
-}
-
-extension String {
+    
     /// converts String to Double, works with decimal seperator . or , - if conversion fails then returns nil
     func toDouble() -> Double? {
         
@@ -55,25 +49,24 @@ extension String {
         }
         return nil
     }
-}
-
-extension String {
+    
     func contains(find: String) -> Bool{
         return self.range(of: find) != nil
     }
     func containsIgnoringCase(find: String) -> Bool{
         return self.range(of: find, options: .caseInsensitive) != nil
     }
-}
-
-extension String {
+    
     func sha1() -> String {
         // sha1() here is a function in CryptoSwift Library
         return Data(self.utf8).sha1().hexEncodedString()
     }
-}
-
-extension String {
+        
+    func sha256() -> String {
+        // sha256() here is a function in CryptoSwift Library
+        return Data(self.utf8).sha256().hexEncodedString()
+    }
+    
     /// creates uicolor interpreting hex as hex color code, example #CED430
     func hexStringToUIColor () -> UIColor {
         var cString:String = self.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
@@ -86,8 +79,8 @@ extension String {
             return UIColor.gray
         }
         
-        var rgbValue:UInt32 = 0
-        Scanner(string: cString).scanHexInt32(&rgbValue)
+        var rgbValue: UInt64 = 0
+        Scanner(string: cString).scanHexInt64(&rgbValue)
         
         return UIColor(
             red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
@@ -96,10 +89,6 @@ extension String {
             alpha: CGFloat(1.0)
         )
     }
-
-}
-
-extension String {
     
     /// checks if string length is > 0 and if so returns self, otherwise returns nil
     ///
@@ -108,9 +97,6 @@ extension String {
         if self.count > 0 {return self}
         return nil
     }
-}
-
-extension String {
     
     /// Percent escape value to be added to a URL query value as specified in RFC 3986
     ///
@@ -163,7 +149,7 @@ extension String {
             }
             isOn = !isOn
         }
-
+        
         return isOn
         
     }
@@ -197,10 +183,7 @@ extension String {
         
         return data
     }
-
-}
-
-extension String {
+    
     func dateFromISOString() -> Date? {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -209,6 +192,54 @@ extension String {
         
         return dateFormatter.date(from: self)
     }
+    
+    mutating func appendStringAndNewLine(_ stringToAdd: String) {
+        
+        self = self + stringToAdd + "\n"
+        
+    }
+    
+    /// use this to partially obscure a password, API-SECRET, token or other sensitive data. We want the user to see that something recognisable is there that makes sense to them, but it won't reveal any useful private information if they screenshot it
+    func obscured() -> String {
+        
+        var obscuredString = self
+        
+        let stringLength: Int = obscuredString.count
+        
+        // in order to avoid strange layouts if somebody uses a really long API_SECRET or token, then let's limit the displayed string size to something more manageable
+        let maxStringSizeToShow: Int = 12
+        
+        // the characters we will use to obscure the sensitive data
+        let maskingCharacter: String = "*"
+        
+        // based upon the length of the string, we will show more, or less, of the original characters at the beginning. This gives more context whilst maintaining privacy
+        var startCharsNotToObscure: Int = 0
+        
+        switch stringLength {
+        case 0...3:
+            startCharsNotToObscure = 0
+        case 4...5:
+            startCharsNotToObscure = 1
+        case 6...7:
+            startCharsNotToObscure = 2
+        case 8...10:
+            startCharsNotToObscure = 3
+        case 11...50:
+            startCharsNotToObscure = 4
+        default:
+            startCharsNotToObscure = 0
+        }
+        
+        // remove the characters that we want to obscure
+        obscuredString.removeLast(stringLength - startCharsNotToObscure)
+        
+        // now "fill up" the string with the masking character up to the original string size. If it is longer than the maxStingSizeToShow then trim it down to make everything fit in a clean way
+        obscuredString += String(repeating: maskingCharacter, count: stringLength > maxStringSizeToShow ? maxStringSizeToShow - obscuredString.count : stringLength - obscuredString.count)
+        
+        return obscuredString
+        
+    }
+    
 }
 
 extension Optional where Wrapped == String {
@@ -221,7 +252,7 @@ extension Optional where Wrapped == String {
         
         // if self nil, then return nil
         guard var returnValue = self else {return nil}
-                
+        
         // if self doesn't start with http or https, then add https. This might not make sense, but it will guard against throwing fatal errors when trying to get the scheme of the Endpoint
         if !returnValue.startsWith("http://") && !returnValue.startsWith("https://") {
             returnValue = "https://" + returnValue
@@ -231,18 +262,8 @@ extension Optional where Wrapped == String {
         if returnValue.last == "/" {
             returnValue.removeLast()
         }
-
+        
         return returnValue
         
     }
-}
-
-extension String {
-    
-    mutating func appendStringAndNewLine(_ stringToAdd: String) {
-        
-        self = self + stringToAdd + "\n"
-        
-    }
-
 }

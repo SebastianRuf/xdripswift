@@ -21,28 +21,58 @@
 "connect" = "Yhdistä";
 "connectedAt" = "Yhdistetty osoitteessa";
 "disConnectedAt" = "Yhteys katkaistu";
-"resetRequired" = "Nollaa lähetin?";
+"resetRequired" = "Nollaa lähetin";
 "lastReset" = "Viimeisin nollaus";
 "lastResetNotKnown" = "Viimeisen nollauksen aikaleima ei ole tiedossa";
 "transmitterResultResult" = "Lähettimen nollaus tulos";
 "bootLoader" = "Käynnistyslatain";
 "cannotActiveCGMInFollowerMode" = "Et voi aktivoida CGM:ää seuraaja-tilassa";
 
+/// Dexcom bluetooth screen. Is another app used in parallel or not
+"useOtherDexcomApp" = "Lue Dexcom-sovelluksesta";
+
+/// Disconnect transmitter, title
+"confirmDisconnectTitle" = "Vahvista yhteyden katkaisu";
+
+/// Confirm that the user wants to really disconnect the transmitter, title
+"confirmDisconnectMessage" = "Napsauta 'Katkaise yhteys' vahvistaaksesi, että haluat todella katkaista yhteyden lähettimeen.";
+
+/// cell text, sensor start time
+"sensorStartDate" = "Sensorin aloitus";
+
+/// cell text, transmitter start time
+"transmittterStartDate" = "Lähettimen aloitus";
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////   Translation needed - remove this header after translation                       /////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Dexcom bluetooth screen. Is another app used in parallel or not
-"useOtherDexcomApp" = "Read from Dexcom app";
+/// Sensor scan successful, title
+"nfcScanSuccessfulTitle" = "Sensor Scan Successful!";
 
-/// Disconnect transmitter, title
-"confirmDisconnectTitle" = "Confirm Disconnect";
+/// text to inform the user that multi-point calibration is an advanced option and could be dangerous if used incorrectly
+"nonFixedSlopeWarning" = "Multi-point calibration is an advanced feature.\n\nPlease do not use this feature until you have read the calibration section of the online help and understand how it works.";
 
-/// Confirm that the user wants to really disconnect the transmitter, title
-"confirmDisconnectMessage" = "Click 'Disconnect' to confirm that you really want to disconnect from the transmitter.";
+/// Ask if the user wants to try and scan the sensor again
+"nfcScanFailedMessage" = "\n⚠️ Please scan again ⚠️";
 
-/// cell text, sensor start time
-"sensorStartDate" = "Sensor Started";
+/// Sensor scan error, title
+"nfcScanFailedTitle" = "Sensor Scan Failed";
 
-/// cell text, transmitter start time
-"transmittterStartDate" = "Transmitter Started";
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanFailed" = "Sensor scan has failed";
+
+/// text in status row, when waiting for a successful NFC scan before starting bluetooth scanning
+"nfcScanNeeded" = "NFC scan needed";
+
+/// Tell the user the scan has failed and we're retrying several times
+"nfcErrorMessageScanErrorRetrying" = "Sensor scan error\n\nRetrying... # ";
+
+/// sensor warm-up text
+"warmingUpUntil" = "Warming up until";
+
+/// Scan again button
+"nfcScanFailedScanAgainButton" = "Scan Again";
+
+/// Tell the user the scan was successful and to just wait now for connection
+"nfcScanSuccessfulMessage" = "\n✅ Scan successful ✅\n\nClick OK and just wait to allow the sensor to finish connecting via bluetooth.\n\nIn a short while the status should change to 'Connected'.";

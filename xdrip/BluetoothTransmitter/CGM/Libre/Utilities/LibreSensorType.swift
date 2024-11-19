@@ -6,13 +6,17 @@ import os
 public enum LibreSensorType: String {
     
     // Libre 1
-    case libre1    = "DF"
+    case libre1 = "DF"
     
-    case libre1A2 =  "A2"
+    case libre1A2 = "A2"
     
-    case libre2    = "9D"
+    case libre2 = "9D"
     
-    case libreUS   = "E5"
+    case libre2C5 = "C5"
+    
+    case libre2C6 = "C6" // EU Libre 2 Plus
+    
+    case libreUS = "E5"
     
     case libreUSE6 = "E6"
    
@@ -29,7 +33,13 @@ public enum LibreSensorType: String {
             return "Libre 1 A2"
             
         case .libre2:
-            return "Libre 2"
+            return "Libre 2 EU"
+            
+        case .libre2C5:
+            return "Libre 2 EU C5"
+            
+        case .libre2C6:
+            return "Libre 2 Plus EU"
             
         case .libreUS:
             return "Libre US"
@@ -56,7 +66,7 @@ public enum LibreSensorType: String {
         }
         
         // decrypt if libre2 or libreUS
-        if self == .libre2 || self == .libreUS || self == .libreUSE6 {
+        if self == .libre2 || self == .libre2C5 || self == .libre2C6 || self == .libreUS || self == .libreUSE6 {
             
             var libreData = rxBuffer.subdata(in: headerLength..<(rxBufferEnd + 1))
 
@@ -123,6 +133,12 @@ public enum LibreSensorType: String {
         case "9D":
             return .libre2
             
+        case "C5":
+            return .libre2C5 // new Libre 2 EU type (May 2023)
+            
+        case "C6":
+            return .libre2C6 // new Libre 2 Plus EU type (May 2024)
+            
         case "E5":
             return .libreUS
             
@@ -140,18 +156,21 @@ public enum LibreSensorType: String {
     }
     
     /// maximum sensor age in days, nil if no maximum
-    func maxSensorAgeInDays() -> Int? {
+    func maxSensorAgeInDays() -> Double? {
         
         switch self {
         
         case .libre1:
-            return 14
+            return 14.5
             
         case .libre1A2:
-            return 14
+            return 14.5
 
-        case .libre2:
-            return 14
+        case .libre2, .libre2C5:
+            return 14.5
+            
+        case .libre2C6:
+            return 15.5
 
         case .libreUS, .libreUSE6:
             return nil

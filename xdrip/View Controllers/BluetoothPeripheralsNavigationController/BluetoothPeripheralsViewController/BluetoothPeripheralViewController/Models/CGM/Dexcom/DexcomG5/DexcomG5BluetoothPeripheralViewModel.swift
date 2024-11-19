@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import CoreBluetooth
+import os
 
 class DexcomG5BluetoothPeripheralViewModel {
     
@@ -43,12 +44,6 @@ class DexcomG5BluetoothPeripheralViewModel {
         case voltageA = 0
         
         case voltageB = 1
-        
-        case batteryRuntime = 2
-        
-        case batteryTemperature = 3
-
-        case batteryResist = 4
 
     }
     
@@ -139,6 +134,16 @@ class DexcomG5BluetoothPeripheralViewModel {
 
         return false
         
+    }
+    
+    /// should we show the sensor start time? This is needed because it is initialized to date() with a new peripheral and we don't really
+    /// want to show any date until the sensor session is started and we get a real date
+    private func shouldShowSensorStartDate() -> Bool {
+        if let dexcomG5 = dexcomG5, dexcomG5.sensorStatus != DexcomAlgorithmState.SessionStopped.description {
+            return true
+        }
+        
+        return false
     }
 
     // MARK: - public functions
@@ -231,7 +236,7 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
                 
                 var startDateString = ""
                 
-                if let startDate = dexcomG5.sensorStartDate {
+                if let startDate = dexcomG5.sensorStartDate, shouldShowSensorStartDate() {
                     
                     let sensorTimeInMinutes = -Int(startDate.timeIntervalSinceNow / 60)
 
@@ -251,12 +256,16 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
                         
                     }
                     
+                } else {
+                    
+                    startDateString = Texts_HomeView.notStarted
+                    
                 }
                 
                 cell.textLabel?.text = Texts_BluetoothPeripheralView.sensorStartDate
                 cell.detailTextLabel?.text = startDateString
-                cell.accessoryType = .disclosureIndicator
-                cell.accessoryView = disclosureAccessoryView
+                cell.accessoryView = shouldShowSensorStartDate() ? disclosureAccessoryView : nil
+                cell.accessoryType = shouldShowSensorStartDate() ? .disclosureIndicator : .none
                 
             case .transmitterStartDate:
                 
@@ -329,25 +338,30 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
                         // set isOn value to cGMG5Transmitter
                         cGMG5Transmitter.reset(requested: isOn)
                         
+                        if isOn {
+                            
+                            // define and present alertcontroller, this will show a message to explain that the reset function only works with certain transmitters
+                            let alert = UIAlertController(title: Texts_BluetoothPeripheralView.resetRequired, message: Texts_SettingsView.resetDexcomTransmitterMessage, actionHandler: nil)
+                            
+                            self.bluetoothPeripheralViewController?.present(alert, animated: true, completion: nil)
+                            
+                        }
+                        
                     }
                     
                 })
                 
             case .lastResetTimeStamp:
+                
+                cell.textLabel?.text = Texts_BluetoothPeripheralView.lastResetTimeStamp
             
                 if let lastResetTimeStamp = dexcomG5.lastResetTimeStamp {
-
-                    cell.textLabel?.text = Texts_BluetoothPeripheralView.lastResetTimeStamp
                     cell.detailTextLabel?.text = lastResetTimeStamp.toStringInUserLocale(timeStyle: .short, dateStyle: .short)
-                    cell.accessoryType = .none
-
                 } else {
-                    
-                    cell.textLabel?.text = Texts_BluetoothPeripheralView.lastResetTimeStampNotKnown
-                    cell.detailTextLabel?.text = nil
-                    cell.accessoryType = .none
-                    
+                    cell.detailTextLabel?.text = "-"
                 }
+                
+                cell.accessoryType = .none
 
             }
             
@@ -363,7 +377,7 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
             case .voltageA:
                 
                 cell.textLabel?.text = "Voltage A"
-                cell.detailTextLabel?.text = dexcomG5.voltageA != 0 ? dexcomG5.voltageA.description + "0 mV" : ""
+                cell.detailTextLabel?.text = dexcomG5.voltageA != 0 ? dexcomG5.voltageA.description + "0 mV" : "Waiting for data..."
                 
             case .voltageB:
                 
@@ -382,22 +396,7 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
                     }
                 }
                 
-                cell.detailTextLabel?.text = dexcomG5.voltageB != 0 ? dexcomBatteryLevelIndicator + dexcomG5.voltageB.description + "0 mV" : ""
-                
-            case .batteryResist:
-                
-                cell.textLabel?.text = "Resistance"
-                cell.detailTextLabel?.text = dexcomG5.batteryResist != 0 ? dexcomG5.batteryResist.description : ""
-                
-            case .batteryRuntime:
-                
-                cell.textLabel?.text = "Runtime"
-                cell.detailTextLabel?.text = dexcomG5.batteryRuntime != 0 ? ( dexcomG5.batteryRuntime != -1 ? dexcomG5.batteryRuntime.description : "n/a" ) : ""
-                
-            case .batteryTemperature:
-                
-                cell.textLabel?.text = "Temperature"
-                cell.detailTextLabel?.text = dexcomG5.batteryTemperature != 0 ? dexcomG5.batteryTemperature.description : ""
+                cell.detailTextLabel?.text = dexcomG5.voltageB != 0 ? dexcomBatteryLevelIndicator + dexcomG5.voltageB.description + "0 mV" : "Waiting for data..."
                 
             }
 
@@ -409,42 +408,53 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
         
         guard let setting = Settings(rawValue: rawValue) else { fatalError("DexcomG5BluetoothPeripheralViewModel userDidSelectRow, unexpected setting") }
         
-        switch setting {
+        // just show select row actions for the general dexcom section
+        switch section {
             
-        case .sensorStatus:
+        case 1:
             
-            // firmware text could be longer than screen width, clicking the row allos to see it in pop up with more text place
-            if let sensorStatus = dexcomG5?.sensorStatus {
-                return .showInfoText(title: Texts_Common.sensorStatus, message: "\n" + sensorStatus)
+            switch setting {
+                
+            case .sensorStatus:
+                
+                // firmware text could be longer than screen width, clicking the row allos to see it in pop up with more text place
+                if let sensorStatus = dexcomG5?.sensorStatus {
+                    return .showInfoText(title: Texts_Common.sensorStatus, message: "\n" + sensorStatus)
+                }
+                
+            case .sensorStartDate:
+                
+                if let startDate = dexcomG5?.sensorStartDate, shouldShowSensorStartDate() {
+                    
+                    var startDateString = startDate.toStringInUserLocale(timeStyle: .short, dateStyle: .short)
+                    
+                    startDateString += "\n\n" + startDate.daysAndHoursAgo() + " " + Texts_HomeView.ago
+                    
+                    return .showInfoText(title: Texts_BluetoothPeripheralView.sensorStartDate, message: "\n" + startDateString)
+                    
+                } else {
+                    return .nothing
+                }
+                
+            case .transmitterStartDate:
+                
+                if let startDate = dexcomG5?.transmitterStartDate {
+                    
+                    var startDateString = startDate.toStringInUserLocale(timeStyle: .short, dateStyle: .short)
+                    
+                    startDateString += "\n\n" + startDate.daysAndHoursAgo() + " " + Texts_HomeView.ago
+                    
+                    return .showInfoText(title: Texts_BluetoothPeripheralView.transmittterStartDate, message: "\n" + startDateString)
+                    
+                }
+                
+            case .firmWareVersion, .userOtherApp:
+                return .nothing
+                
             }
             
-        case .sensorStartDate:
-            
-            if let startDate = dexcomG5?.sensorStartDate {
-                
-                var startDateString = startDate.toStringInUserLocale(timeStyle: .short, dateStyle: .short)
-                
-                startDateString += "\n\n" + startDate.daysAndHoursAgo() + " " + Texts_HomeView.ago
-                
-                return .showInfoText(title: Texts_BluetoothPeripheralView.sensorStartDate, message: "\n" + startDateString)
-                
-            }
-            
-        case .transmitterStartDate:
-            
-            if let startDate = dexcomG5?.transmitterStartDate {
-                
-                var startDateString = startDate.toStringInUserLocale(timeStyle: .short, dateStyle: .short)
-                
-                startDateString += "\n\n" + startDate.daysAndHoursAgo() + " " + Texts_HomeView.ago
-                
-                return .showInfoText(title: Texts_BluetoothPeripheralView.transmittterStartDate, message: "\n" + startDateString)
-                
-            }
-            
-        case .firmWareVersion, .userOtherApp:
+        default:
             return .nothing
-            
         }
         
         return .nothing
@@ -470,16 +480,8 @@ extension DexcomG5BluetoothPeripheralViewModel: BluetoothPeripheralViewModel {
     }
     
     func numberOfSections() -> Int {
-        
-        if isFireFly() {
             
-            return DexcomSection.allCases.count - 1
-            
-        } else {
-            
-            return DexcomSection.allCases.count
-            
-        }
+        return DexcomSection.allCases.count
         
     }
     
@@ -586,3 +588,4 @@ extension DexcomG5BluetoothPeripheralViewModel: CGMG5TransmitterDelegate {
     }
 
 }
+

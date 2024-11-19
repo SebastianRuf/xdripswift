@@ -40,32 +40,29 @@ class TreatmentTableViewCell: UITableViewCell {
         case .BgCheck:
             self.iconImageView.tintColor =  ConstantsGlucoseChart.bgCheckTreatmentColorInner
             
-        }
-        
-        if #available(iOS 13.0, *) {
-            
-            switch treatment.treatmentType {
-                
-            case .Insulin:
-                self.iconImageView.image =  UIImage(systemName: "arrowtriangle.down.fill")!
-                
-            case .Carbs:
-                self.iconImageView.image =  UIImage(systemName: "circle.fill")!
-                
-            case .Exercise:
-                self.iconImageView.image =  UIImage(systemName: "heart.fill")!
-                
-            case .BgCheck:
-                self.iconImageView.image =  UIImage(systemName: "drop.fill") ?? nil
-                
-            }
-            
-        } else {
-            
-            self.iconImageView.image =  nil
+        default:
+            self.iconImageView.tintColor =  nil
             
         }
         
+        switch treatment.treatmentType {
+            
+        case .Insulin:
+            self.iconImageView.image =  UIImage(systemName: "arrowtriangle.down.fill")!
+            
+        case .Carbs:
+            self.iconImageView.image =  UIImage(systemName: "circle.fill")!
+            
+        case .Exercise:
+            self.iconImageView.image =  UIImage(systemName: "heart.fill")!
+            
+        case .BgCheck:
+            self.iconImageView.image =  UIImage(systemName: "drop.fill") ?? nil
+            
+        default:
+            self.iconImageView.tintColor =  nil
+            
+        }
         
         // treatment type label
         self.typeLabel.text = treatment.treatmentType.asString()
@@ -77,7 +74,7 @@ class TreatmentTableViewCell: UITableViewCell {
             let isMgDl: Bool = UserDefaults.standard.bloodGlucoseUnitIsMgDl
             
             // convert to mmol/l if needed, round accordingly and add the correct units
-            self.valueLabel.text = treatment.value.mgdlToMmol(mgdl: isMgDl).bgValueRounded(mgdl: isMgDl).stringWithoutTrailingZeroes
+            self.valueLabel.text = treatment.value.mgDlToMmol(mgDl: isMgDl).bgValueRounded(mgDl: isMgDl).stringWithoutTrailingZeroes
             
         } else {
             
